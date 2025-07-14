@@ -228,9 +228,15 @@
       background-color: #fadbd8;
       color: #e74c3c;
     }
+
+    img {
+      max-width: 100%;
+    }
   </style>
 </head>
-
+<header>
+  <img src="./banner.png" alt="">
+</header>
 <body>
   <h1>TES BAKAT HOLLAND RIASEC</h1>
 
@@ -412,7 +418,7 @@
       </tr>
       <tr>
         <td><input type="checkbox"> Ingin berguna bagi masyarakat dan komunitas</td>
-        <td><input type="checkbox"> Memantau dan memantau sebuah project atau kegiatan</td>
+        <td><input type="checkbox"> Memantau sebuah project atau kegiatan</td>
         <td><input type="checkbox"> Mendengarkan, membimbing, menasihati, dan menjelaskan sesuatu pada orang lain</td>
       </tr>
     </table>
@@ -589,82 +595,161 @@
     document.getElementById('calculate-btn').addEventListener('click', calculateResults);
 
     function calculateResults() {
-      // Previous calculation code remains the same
+      // Validate form
+      const name = document.getElementById('fullName').value.trim();
+      const birthDate = document.getElementById('birthDate').value;
+      
+      if (!name || !birthDate) {
+          alert('Silakan isi nama lengkap dan tanggal lahir terlebih dahulu.');
+          return;
+      }
+      
+      // Calculate points for each section
+      const sections = ['realistic', 'investigative', 'artistic', 'social', 'enterprising', 'conventional'];
+      const points = {};
+      
+      sections.forEach(section => {
+          const checkboxes = document.querySelectorAll(`#${section}-section input[type="checkbox"]:checked`);
+          points[section] = checkboxes.length;
+      });
+      
+      // Convert to array and sort by points
+      const sortedResults = Object.entries(points)
+          .map(([type, score]) => ({ type, score }))
+          .sort((a, b) => b.score - a.score);
+      
+      // Display user info
+      document.getElementById('result-name').textContent = name;
+      document.getElementById('result-birthdate').textContent = birthDate;
+      
+      // Display top 3 results
+      const topResultsContainer = document.getElementById('top-results');
+      topResultsContainer.innerHTML = '';
+      
+      for (let i = 0; i < 3 && i < sortedResults.length; i++) {
+          const result = sortedResults[i];
+          const resultDiv = document.createElement('div');
+          resultDiv.className = 'result-item';
+          resultDiv.innerHTML = `
+              <h3 class="result-title">${i+1}. ${personalityLabels[result.type]}</h3>
+              <p><strong>Skor:</strong> ${result.score}</p>
+              <p>${personalityDescriptions[result.type]}</p>
+              
+              <h4>Profesi yang Cocok:</h4>
+              <ul class="career-list">
+                  ${careerSuggestions[result.type].map(career => `<li>${career}</li>`).join('')}
+              </ul>
+          `;
+          topResultsContainer.appendChild(resultDiv);
+      }
+
+      // Show all results with scores
+      const resultDetailsContainer = document.getElementById('result-details');
+      resultDetailsContainer.innerHTML = '<h3>Detail Semua Hasil:</h3>';
+      
+      sortedResults.forEach(result => {
+          const resultDiv = document.createElement('div');
+          resultDiv.className = 'result-item';
+          resultDiv.innerHTML = `
+              <h4>${personalityLabels[result.type]}: ${result.score} poin</h4>
+          `;
+          resultDetailsContainer.appendChild(resultDiv);
+      });
+      
+      // Show results section
+      document.getElementById('results').style.display = 'block';
+      
+      // Scroll to results
+      document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
 
       // After showing results, set up save button
       document.getElementById('save-btn').addEventListener('click', saveToGoogleSheets);
     }
 
     async function saveToGoogleSheets() {
-      const saveBtn = document.getElementById('save-btn');
-      const saveMessage = document.getElementById('save-message');
-
-      // Get user info
-      const name = document.getElementById('fullName').value.trim();
-      const birthDate = document.getElementById('birthDate').value;
-
-      // Get all points
-      const sections = ['realistic', 'investigative', 'artistic', 'social', 'enterprising', 'conventional'];
-      const points = {};
-
-      sections.forEach(section => {
-        const checkboxes = document.querySelectorAll(`#${section}-section input[type="checkbox"]:checked`);
-        points[section] = checkboxes.length;
-      });
-
-      // Get top 3 results
-      const sortedResults = Object.entries(points)
-        .map(([type, score]) => ({ type, score }))
-        .sort((a, b) => b.score - a.score);
-
-      const topResults = sortedResults.slice(0, 3).map(result => personalityLabels[result.type]);
-
-      // Prepare data for submission
-      const formData = {
-        name: name,
-        birthDate: birthDate,
-        realistic: points.realistic,
-        investigative: points.investigative,
-        artistic: points.artistic,
-        social: points.social,
-        enterprising: points.enterprising,
-        conventional: points.conventional,
-        topResults: topResults.join(', '),
-        timestamp: new Date().toISOString()
-      };
-
-      // Show loading state
-      saveBtn.disabled = true;
-      saveBtn.innerHTML = 'Menyimpan <span class="loading"></span>';
-      saveMessage.style.display = 'none';
-
-      try {
-        // Replace with your Google Apps Script deployment URL
-        const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL';
-
-        const response = await fetch(scriptUrl, {
-          method: 'POST',
-          mode: 'no-cors',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData)
+        const saveBtn = document.getElementById('save-btn');
+        const saveMessage = document.getElementById('save-message');
+        
+        // Get user info
+        const name = document.getElementById('fullName').value.trim();
+        const birthDate = document.getElementById('birthDate').value;
+        
+        // Get all points
+        const sections = ['realistic', 'investigative', 'artistic', 'social', 'enterprising', 'conventional'];
+        const points = {};
+        
+        sections.forEach(section => {
+            const checkboxes = document.querySelectorAll(`#${section}-section input[type="checkbox"]:checked`);
+            points[section] = checkboxes.length;
+        });
+        
+        // Get top 3 results
+        const sortedResults = Object.entries(points)
+            .map(([type, score]) => ({ type, score }))
+            .sort((a, b) => b.score - a.score);
+        
+        const topResults = sortedResults.slice(0, 3).map(result => personalityLabels[result.type]);
+        
+        // Collect all selected answers
+        const selectedAnswers = [];
+        document.querySelectorAll('input[type="checkbox"]:checked').forEach(checkbox => {
+            const row = checkbox.closest('tr');
+            if (row) {
+                const question = checkbox.closest('td').textContent.trim();
+                const section = checkbox.closest('.test-section').querySelector('.section-title').textContent;
+                selectedAnswers.push({
+                    section: section.replace(/^[A-Z] - /, ''), // Remove prefix like "R - "
+                    question: question,
+                    answer: checkbox.value || 'Selected' // Use value if exists, otherwise "Selected"
+                });
+            }
         });
 
-        // Since we're using no-cors mode, we can't read the response
-        // But we'll assume it worked if we didn't get an error
-        saveMessage.textContent = 'Data berhasil disimpan!';
-        saveMessage.className = 'save-message success';
-        saveMessage.style.display = 'block';
-      } catch (error) {
-        console.error('Error:', error);
-        saveMessage.textContent = 'Gagal menyimpan data. Silakan coba lagi.';
-        saveMessage.className = 'save-message error';
-        saveMessage.style.display = 'block';
-      } finally {
-        saveBtn.disabled = false;
-        saveBtn.textContent = 'Simpan Hasil ke Google Spreadsheet';
-      }
+        // Prepare data for submission
+        const formData = {
+            name: name,
+            birthDate: birthDate,
+            realistic: points.realistic,
+            investigative: points.investigative,
+            artistic: points.artistic,
+            social: points.social,
+            enterprising: points.enterprising,
+            conventional: points.conventional,
+            topResults: topResults.join(', '),
+            timestamp: new Date().toISOString(),
+            answers: selectedAnswers
+        };
+        
+        // Show loading state
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = 'Menyimpan <span class="loading"></span>';
+        saveMessage.style.display = 'none';
+        
+        try {
+            // Replace with your Google Apps Script deployment URL
+            const scriptUrl = 'https://script.google.com/macros/s/AKfycbysEj5gPw7OpumxnuQ7beuIeu_x0hZKu8yVyuf0mLxRabHdQ4RaOyccut8cCkfaaZMk-g/exec';
+            
+            const response = await fetch(scriptUrl, {
+                method: 'POST',
+                mode: 'no-cors',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            });
+            
+            saveMessage.textContent = 'Data berhasil disimpan!';
+            saveMessage.className = 'save-message success';
+            saveMessage.style.display = 'block';
+        } catch (error) {
+            console.error('Error:', error);
+            saveMessage.textContent = 'Gagal menyimpan data. Silakan coba lagi.';
+            saveMessage.className = 'save-message error';
+            saveMessage.style.display = 'block';
+        } finally {
+            saveBtn.disabled = false;
+            saveBtn.textContent = 'Simpan Hasil ke Google Spreadsheet';
+        }
     }
   </script>
 </body>
