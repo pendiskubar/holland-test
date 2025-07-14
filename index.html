@@ -232,6 +232,48 @@
     img {
       max-width: 100%;
     }
+
+    @media print {
+        body * {
+            visibility: hidden;
+        }
+        .results, .results * {
+            visibility: visible;
+        }
+        .results {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin: 0;
+            padding: 20px;
+            box-shadow: none;
+        }
+        .save-section, #calculate-btn {
+            display: none !important;
+        }
+        .print-banner {
+            display: block;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .print-banner img {
+            max-width: 100%;
+            height: auto;
+        }
+    }
+
+    /* Add this to your existing styles */
+    .print-banner {
+        display: none; /* Hidden by default */
+    }
+    .print-btn {
+        background-color: #6c757d;
+        margin-left: 10px;
+    }
+    .print-btn:hover {
+        background-color: #5a6268;
+    }
   </style>
 </head>
 <header>
@@ -505,19 +547,24 @@
   <button id="calculate-btn">HASIL TES</button>
 
   <div class="results" id="results">
+    <div class="print-banner">
+        <img src="banner.png" alt="Holland RIASEC Test Banner">
+    </div>
+    
     <h2>Hasil Tes Holland RIASEC</h2>
     <p>Nama: <span id="result-name"></span></p>
     <p>Tanggal Lahir: <span id="result-birthdate"></span></p>
-
-    <h3>Tiga kepribadian kamu yang paling dominan adalah:</h3>
+    <p>Tanggal Tes: <span id="test-date"></span></p>
+    
+    <h3>Dua kepribadian kamu yang paling dominan adalah:</h3>
     <div id="top-results"></div>
-
+    
     <div id="result-details"></div>
 
-    <!-- Add save section -->
     <div class="save-section">
-      <button id="save-btn" class="save-btn">Simpan Hasil ke Google Spreadsheet</button>
-      <div id="save-message" class="save-message"></div>
+        <button id="save-btn" class="save-btn">Simpan Hasil ke Google Spreadsheet</button>
+        <button id="print-btn" class="print-btn">Cetak Hasil</button>
+        <div id="save-message" class="save-message"></div>
     </div>
   </div>
 
@@ -591,6 +638,30 @@
       });
     }
 
+    document.getElementById('print-btn').addEventListener('click', printResults);
+
+    function printResults() {
+        // Add current date to the results
+        const now = new Date();
+        document.getElementById('test-date').textContent = now.toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+        });
+        
+        // Show the banner for printing
+        document.querySelector('.print-banner').style.display = 'block';
+        
+        // Trigger print dialog
+        window.print();
+        
+        // Hide the banner again after printing (or if canceled)
+        setTimeout(() => {
+            document.querySelector('.print-banner').style.display = 'none';
+        }, 1000);
+    }
+
     // Calculate results when button is clicked
     document.getElementById('calculate-btn').addEventListener('click', calculateResults);
 
@@ -626,7 +697,7 @@
       const topResultsContainer = document.getElementById('top-results');
       topResultsContainer.innerHTML = '';
       
-      for (let i = 0; i < 3 && i < sortedResults.length; i++) {
+      for (let i = 0; i < 2 && i < sortedResults.length; i++) {
           const result = sortedResults[i];
           const resultDiv = document.createElement('div');
           resultDiv.className = 'result-item';
